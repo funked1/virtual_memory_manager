@@ -2,6 +2,13 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#define TLB_SIZE 16
+
+typedef struct _TLB_ENTRY
+{
+    int page_num;
+    int frame_num;    
+} TLB_ENTRY;    
 
 int main(int argc, char** argv)
 {
@@ -10,6 +17,8 @@ int main(int argc, char** argv)
 	char str[5];
 	int address;
 
+    TLB_ENTRY *tlb = (TLB_ENTRY*)malloc(sizeof(TLB_ENTRY) * TLB_SIZE);
+    
 	/* Open file for reading */
 	fp = fopen(filename, "r");
 	if (fp == NULL) {
