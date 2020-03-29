@@ -21,6 +21,15 @@ typedef struct _TLB_ENTRY
     int frame_num;    
 } TLB_ENTRY;    
 
+/* Display command line usage and exit */
+void usage(char *command)
+{
+    fprintf(stderr, "usage: %s <filename>\n\n", command);
+    fprintf(stderr, "filename - path to file containing logical addresses to be read\n");
+    exit(-1);
+}
+
+/* Search for a frame number at a given index in the page table */
 int search_pt(int page_num)
 {
     return page_table[page_num];
@@ -28,7 +37,7 @@ int search_pt(int page_num)
 
 int main(int argc, char** argv)
 {
-    char filename[] = "addresses.txt"; // File to read logical addresses from
+    char *filename;
     FILE *fp;
     char str[5];  // Buffer to hold a single address read from file
     uint32_t address;  // Integer value of current address read from file (32 bits)    
@@ -38,6 +47,21 @@ int main(int argc, char** argv)
     
     TLB_ENTRY *tlb = (TLB_ENTRY*)malloc(sizeof(TLB_ENTRY) * TLB_SIZE);
 
+    /* Parse from command line */
+    if(argc == 1)
+    {
+        usage(argv[0]);
+    }
+    else if(argc > 2)
+    {
+        fprintf(stderr, "%s: Too many arguments\n", argv[0]);
+        usage(argv[0]);
+    }
+    else
+    {
+        filename = argv[1];
+    }
+    
     /* Initialize page table values to -1 (indicating empty)*/
     for(int i = 0; i < PT_SIZE; i++) 
         page_table[i] = -1;
