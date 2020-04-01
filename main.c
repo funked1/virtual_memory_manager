@@ -8,11 +8,14 @@
 #define PAGE_NUM_SIZE 8
 #define OFFSET_SIZE 8
 
-#define TLB_SIZE 16 // TLB has 16 entries
-#define PT_SIZE 256
-#define NUM_FRAMES 256
+#define TLB_SIZE 16		// number of TLB entries
+#define PT_SIZE 256		// number of page table entries
+#define FRAME_SIZE 256  // number of bytes per frame
+#define NUM_FRAMES 256  // number of frames in physical memory
 
-int page_table[PT_SIZE]; //Global page table
+/* Global data structures */
+int8_t page_table[PT_SIZE];
+int8_t physical_mem[FRAME_SIZE][NUM_FRAMES];
 
 /* Structure for a single entry in the TLB */
 typedef struct _TLB_ENTRY
@@ -25,7 +28,8 @@ typedef struct _TLB_ENTRY
 void usage(char *command)
 {
     fprintf(stderr, "usage: %s <filename>\n\n", command);
-    fprintf(stderr, "filename - path to file containing logical addresses to be read\n");
+    fprintf(stderr, "filename - path to file containing logical "\
+			"addresses to be read\n");
     exit(-1);
 }
 
@@ -38,16 +42,17 @@ int search_pt(int page_num)
 int main(int argc, char** argv)
 {
     char *filename;
+	char *mem_file = "BACKING_STORE.bin";
     FILE *fp;
     char str[5];  // Buffer to hold a single address read from file
-    uint32_t address;  // Integer value of current address read from file (32 bits)    
+    uint32_t address;  // Integer value of current address read from file     
     
     uint8_t page_num; // Page number parsed from logical address (bits 15 - 8)
     uint8_t offset;   // Offset within the frame indicated by page_num parsed from logical address (bits 7 - 0)
     
     TLB_ENTRY *tlb = (TLB_ENTRY*)malloc(sizeof(TLB_ENTRY) * TLB_SIZE);
 
-    /* Parse from command line */
+    /* Parse filename from command line */
     if(argc == 1)
     {
         usage(argv[0]);
