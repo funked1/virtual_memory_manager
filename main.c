@@ -12,14 +12,20 @@
 #define PT_SIZE 256
 #define NUM_FRAMES 256
 
-int page_table[PT_SIZE]; //Global page table
-
 /* Structure for a single entry in the TLB */
 typedef struct _TLB_ENTRY
 {
     int page_num;
     int frame_num;    
 } TLB_ENTRY;    
+
+typedef struct _PT_ENTRY
+{
+    int frame_num;
+    int valid;  //valid bit: 0 -> invalid; 1 -> valid
+} PT_ENTRY;
+
+PT_ENTRY page_table[PT_SIZE]; //Global page table
 
 /* Display command line usage and exit */
 void usage(char *command)
@@ -32,7 +38,10 @@ void usage(char *command)
 /* Search for a frame number at a given index in the page table */
 int search_pt(int page_num)
 {
-    return page_table[page_num];
+    if(page_table[page_num].valid)        
+        return page_table[page_num].frame_num;
+    else
+        return -1;
 }
 
 int main(int argc, char** argv)
@@ -62,9 +71,9 @@ int main(int argc, char** argv)
         filename = argv[1];
     }
     
-    /* Initialize page table values to -1 (indicating empty)*/
-    for(int i = 0; i < PT_SIZE; i++) 
-        page_table[i] = -1;
+    /* Initialize page table elements to invalid*/
+    for(int i = 0; i < PT_SIZE; i++)    
+        page_table[i].valid = 0;
     
     /* Open file for reading */
     fp = fopen(filename, "r");
