@@ -49,6 +49,34 @@ int search_pt(int page_num)
         return -1;
 }
 
+int handle_page_fault(char* mem_file, uint8_t page_num, uint8_t frame_ptr)
+{
+	int8_t buffer[256];
+	FILE *fp = fopen(mem_file, "r");
+	if (fp == NULL) {
+		perror("Error opening memory file");
+		return -1;
+	}
+	else {
+		/* Get memory contents from bin file */
+		fseek(fp, (page_num * FRAME_SIZE), SEEK_SET);
+		fread(buffer, FRAME_SIZE, 1, fp);
+
+		/* Fill frame with buffer contents */
+		for (int i = 0; i < FRAME_SIZE; ++i) {
+			physical_mem[frame_ptr][i] = buffer[i];
+		}
+
+		/* Update page table */
+		page_table[page_num].valid = 1;
+		page_table[page_num].frame_num = frame_ptr;
+
+		fclose(fp);
+		return 0;
+	}
+	
+}
+
 int main(int argc, char** argv)
 {
     char *filename;
@@ -59,7 +87,8 @@ int main(int argc, char** argv)
     
     uint8_t page_num; // Page number parsed from logical address (bits 15 - 8)
     uint8_t offset;   // Offset within the frame indicated by page_num parsed from logical address (bits 7 - 0)
-    
+    uint8_t frame_ptr = 0; // pointer to next empty frame in physical memory
+
     TLB_ENTRY *tlb = (TLB_ENTRY*)malloc(sizeof(TLB_ENTRY) * TLB_SIZE);
 
     /* Parse filename from command line */
@@ -98,6 +127,14 @@ int main(int argc, char** argv)
 
         page_num = (address << (ADDR_SIZE - (PAGE_NUM_SIZE + OFFSET_SIZE))) >> (ADDR_SIZE - PAGE_NUM_SIZE);
         offset = (address << (ADDR_SIZE - OFFSET_SIZE)) >> (ADDR_SIZE - OFFSET_SIZE);
+
+		/* Handle page fault */
+		if (search_pt(page_num) == -1) {
+			handle_page_fault(mem_file, page_num, frame_ptr);	
+			++frame_ptr;
+		}
+
+
 
         printf("address: %x\npage_num: %x\noffset: %x\n", address, page_num, offset); // I used this for testing -- feel free to delete whenever
 
