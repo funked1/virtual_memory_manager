@@ -13,11 +13,6 @@
 #define FRAME_SIZE 256  // number of bytes per frame
 #define NUM_FRAMES 256  // number of frames in physical memory
 
-
-/* Global data structures */
-int8_t page_table[PT_SIZE];
-int8_t physical_mem[FRAME_SIZE][NUM_FRAMES];
-
 /* Structure for a single entry in the TLB */
 typedef struct _TLB_ENTRY
 {
@@ -25,13 +20,16 @@ typedef struct _TLB_ENTRY
     int frame_num;    
 } TLB_ENTRY;    
 
+/* Structure for a single entry in the page table */
 typedef struct _PT_ENTRY
 {
     int frame_num;
     int valid;  //valid bit: 0 -> invalid; 1 -> valid
 } PT_ENTRY;
 
-PT_ENTRY page_table[PT_SIZE]; //Global page table
+/* Global data structures */
+PT_ENTRY page_table[PT_SIZE];
+int8_t physical_mem[FRAME_SIZE][NUM_FRAMES];
 
 /* Display command line usage and exit */
 void usage(char *command)
