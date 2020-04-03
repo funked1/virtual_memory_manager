@@ -154,6 +154,29 @@ int main(int argc, char** argv)
     /* Close file after all entries are read */
     fclose(fp);
 
+	/* Produce output files */
+	FILE *out3;
+	int i, j;
+
+	out3 = fopen("out3.txt", "wb");
+	if (out3 == NULL) {
+		perror("Error creating physical memeory output file");
+		return(-1);
+	}
+	else {
+		for (i = 0; i < NUM_FRAMES; ++i) {
+			for (j = 0; j < FRAME_SIZE; ++j) {
+				fprintf(out3, "%d", physical_mem[i][j]);
+			}
+			fprintf(out3, "\n");
+		}
+	}
+
+	/* Close output files after writing contents */
+	fclose(out3);
+
+
+
     /* Free TLB memory */
     free(tlb);
     
