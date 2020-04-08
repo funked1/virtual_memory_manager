@@ -65,7 +65,7 @@ int search_tlb(int page_num)
 	return frame_num;
 }
 
-int handle_page_fault(char* mem_file, uint8_t page_num, uint8_t frame_ptr)
+int handle_page_fault(char* mem_file, uint8_t page_num, uint8_t frame_ptr, uint8_t tlb_ptr)
 {
 	int8_t buffer[256];
 	FILE *fp = fopen(mem_file, "r");
@@ -86,6 +86,10 @@ int handle_page_fault(char* mem_file, uint8_t page_num, uint8_t frame_ptr)
 		/* Update page table */
 		page_table[page_num].valid = 1;
 		page_table[page_num].frame_num = frame_ptr;
+
+		/* Update tlb */
+		tlb[tlb_ptr].page_num = page_num;
+		tlb[tlb_ptr].frame_num = frame_ptr;
 
 		fclose(fp);
 		return 0;
@@ -147,8 +151,9 @@ int main(int argc, char** argv)
 
 		/* Handle page fault */
 		if (search_pt(page_num) == -1) {
-			handle_page_fault(mem_file, page_num, frame_ptr);	
+			handle_page_fault(mem_file, page_num, frame_ptr, tlb_ptr);	
 			++frame_ptr;
+			tlb_ptr = (tlb_ptr + 1) % TLB_SIZE;
 		}
 
 
