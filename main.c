@@ -13,12 +13,20 @@
 #define FRAME_SIZE 256  // number of bytes per frame
 #define NUM_FRAMES 256  // number of frames in physical memory
 
+/* output file names */
+const char file_names[3][10] = {
+	                       "out1.txt",
+					  	   "out2.txt",
+						   "out3.txt"
+						 };
+	
+
 /* Structure for a single entry in the TLB */
 typedef struct _TLB_ENTRY
 {
     int page_num;
     int frame_num;    
-	} TLB_ENTRY;    
+} TLB_ENTRY;    
 
 /* Structure for a single entry in the page table */
 typedef struct _PT_ENTRY
@@ -97,11 +105,35 @@ int handle_page_fault(char* mem_file, uint8_t page_num, uint8_t frame_ptr, uint8
 	
 }
 
+/* Function to check for existence of output files */
+int output_exist(const char *filename)
+{
+	FILE* fp;
+	if (fp = fopen(filename, "r")) {
+		fclose(fp);
+		return 1;
+	}
+	return 0;
+}
+
+/* Function to remove old output files if they exist */
+void clear_old_output()
+{
+	size_t n = sizeof(file_names);
+
+	for (int i = 0; i < n; ++i) {
+		if (output_exist(file_names[i]) == 1) {
+			if (remove(file_names[i]) != 0)
+				perror("Error deleting file\n");
+		}
+	}
+}
+
 int main(int argc, char** argv)
 {
     char *filename;
 	char *mem_file = "BACKING_STORE.bin";
-    FILE *fp;
+    FILE *fp, *out1, *out2, *out3;
     char str[5];  // Buffer to hold a single address read from file
     uint32_t address;  // Integer value of current address read from file     
     
@@ -109,6 +141,9 @@ int main(int argc, char** argv)
     uint8_t offset;   // Offset within the frame indicated by page_num parsed from logical address (bits 7 - 0)
     uint8_t frame_ptr = 0; // pointer to next empty frame in physical memory
 	uint8_t tlb_ptr = 0; // pointer to next empty entry in tlb
+
+	/* Delete old output files */
+	clear_old_output();
 
     TLB_ENTRY *tlb = (TLB_ENTRY*)malloc(sizeof(TLB_ENTRY) * TLB_SIZE);
 
@@ -156,10 +191,19 @@ int main(int argc, char** argv)
 			tlb_ptr = (tlb_ptr + 1) % TLB_SIZE;
 		}
 
+		/* Generate output files */
+		out1 = fopen("out1.txt", "a");	
+		fprintf(out1, "%d", address);
+		fprintf(out1, "\n");
+		fclose(out1);
+
+		out2 = fopen("out2.txt", "a");
+		fclose(out2);
 
 
+/*
         printf("address: %x\npage_num: %x\noffset: %x\n", address, page_num, offset); // I used this for testing -- feel free to delete whenever
-
+*/
         /* TODO: check TLB for page_num. 
 
             TLB HIT: get the corresponding frame_num and access memory at that frame combined with the parsed offset.
@@ -177,7 +221,7 @@ int main(int argc, char** argv)
     fclose(fp);
 
 	/* Produce output files */
-	FILE *out3;
+	//FILE *out3;
 	int i, j;
 
 	out3 = fopen("out3.txt", "wb");
