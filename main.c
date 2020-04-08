@@ -18,7 +18,7 @@ typedef struct _TLB_ENTRY
 {
     int page_num;
     int frame_num;    
-} TLB_ENTRY;    
+	} TLB_ENTRY;    
 
 /* Structure for a single entry in the page table */
 typedef struct _PT_ENTRY
@@ -28,6 +28,7 @@ typedef struct _PT_ENTRY
 } PT_ENTRY;
 
 /* Global data structures */
+TLB_ENTRY tlb[TLB_SIZE];
 PT_ENTRY page_table[PT_SIZE];
 int8_t physical_mem[FRAME_SIZE][NUM_FRAMES];
 
@@ -47,6 +48,21 @@ int search_pt(int page_num)
         return page_table[page_num].frame_num;
     else
         return -1;
+}
+
+/* Search TLB for page number */
+int search_tlb(int page_num)
+{
+	uint8_t frame_num = -1; // assume tlb miss
+
+	for (int i = 0; i < TLB_SIZE; ++i) {
+		if (tlb[i].page_num == page_num) {
+			frame_num = tlb[i].frame_num;
+			break;
+		}
+	}
+
+	return frame_num;
 }
 
 int handle_page_fault(char* mem_file, uint8_t page_num, uint8_t frame_ptr)
@@ -88,6 +104,7 @@ int main(int argc, char** argv)
     uint8_t page_num; // Page number parsed from logical address (bits 15 - 8)
     uint8_t offset;   // Offset within the frame indicated by page_num parsed from logical address (bits 7 - 0)
     uint8_t frame_ptr = 0; // pointer to next empty frame in physical memory
+	uint8_t tlb_ptr = 0; // pointer to next empty entry in tlb
 
     TLB_ENTRY *tlb = (TLB_ENTRY*)malloc(sizeof(TLB_ENTRY) * TLB_SIZE);
 
@@ -160,7 +177,7 @@ int main(int argc, char** argv)
 
 	out3 = fopen("out3.txt", "wb");
 	if (out3 == NULL) {
-		perror("Error creating physical memeory output file");
+		perror("Error creating physical memory output file");
 		return(-1);
 	}
 	else {
