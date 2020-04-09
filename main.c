@@ -47,6 +47,13 @@ void usage(char *command)
             "addresses to be read\n");
 }
 
+/* Cleanup function to free memory before exiting */
+void cleanup()
+{
+    free(tlb);
+    free(pt);
+}
+
 /* Initialize page table elements as invalid*/
 void init_pt()
 {
@@ -185,6 +192,7 @@ int main(int argc, char** argv)
     if (addr_fp == NULL)
     {
         perror(addresses_fn);
+        cleanup();
         return -1;
     }
         
@@ -193,6 +201,9 @@ int main(int argc, char** argv)
     if (out1 == NULL)
     {
         perror("Error opening file out1.txt");
+        fclose(addr_fp);
+        cleanup();
+        return -1;
     }
     
     out2 = fopen("out2.txt", "w");    
@@ -201,6 +212,7 @@ int main(int argc, char** argv)
         perror("Error opening file out2.txt");
         fclose(addr_fp);
         fclose(out1);
+        cleanup();
         return -1;
     }
         
@@ -211,6 +223,7 @@ int main(int argc, char** argv)
         fclose(addr_fp);
         fclose(out1);
         fclose(out2);
+        cleanup();
         return -1;
     }
     
@@ -270,8 +283,7 @@ int main(int argc, char** argv)
     fclose(out3);
 
     /* Free dynamically allocated memory */
-    free(tlb);
-    free(pt);
+    cleanup();
     
     return 0;
 }
