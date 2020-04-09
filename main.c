@@ -156,10 +156,11 @@ int main(int argc, char** argv)
     int frame_num;    // Frame number determined by either TLB or page table
     
     int frame_ptr = 0; // pointer to next frame to replace
-    int tlb_ptr = 0; // pointer to next tlb entry to replace
+    int tlb_ptr = 0;   // pointer to next tlb entry to replace
 
     int page_faults = 0;
     int tlb_hits = 0;
+    int total_references = 0;
     
     int8_t byte_from_frame; // Byte read from physical memory
         
@@ -262,6 +263,8 @@ int main(int argc, char** argv)
             /* TLB HIT */
             tlb_hits++;
         }
+
+        total_references++;
         
         frame_address = frame_num; // Get frame address by combining frame num and offset
         frame_address = (frame_address << OFFSET_SIZE) | offset;
@@ -271,11 +274,12 @@ int main(int argc, char** argv)
         /* Generate output files */
         fprintf(out1, "%d\n", page_address);
         fprintf(out2, "%d\n", frame_address);
-        fprintf(out3, "%d\n", byte_from_frame);        
-
-        //printf("page_address: %x\npage_num: %x\noffset: %x\n", page_address, page_num, offset); // I used this for testing -- feel free to delete whenever        
+        fprintf(out3, "%d\n", byte_from_frame);               
     }
-        
+
+    printf("Page faults = %d / %d, %2f\n", page_faults, total_references, ((double)page_faults / (double)total_references));
+    printf("TLB hits = %d / %d, %2f\n", tlb_hits, total_references, ((double)tlb_hits / (double)total_references));
+    
     /* Close files */
     fclose(addr_fp);
     fclose(out1);
