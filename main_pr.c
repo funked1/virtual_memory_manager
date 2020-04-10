@@ -66,7 +66,7 @@ void init_mem()
     }
 }
 
-/* Initialize page table elements as invalid*/
+/* Initialize page table elements as invalid */
 void init_pt()
 {
     for(int i = 0; i < PT_SIZE; i++)    
@@ -177,7 +177,7 @@ int main(int argc, char** argv)
     char *backing_store_fn = BACKING_STORE_FILENAME;
     FILE *addr_fp, *out1, *out2, *out3;
 
-    char str[5];       // Buffer to hold a single address read from file
+    char str[5];            // Buffer to hold a single address read from file
     uint32_t page_address;  // Current logical address read from file     
     uint32_t frame_address; // Translated physical address
     
@@ -213,7 +213,17 @@ int main(int argc, char** argv)
 
     /* Allocate and initialize TLB and page table */
     tlb = (TLB_ENTRY*)malloc(sizeof(TLB_ENTRY) * TLB_SIZE);
+    if(tlb == NULL)
+    {
+        perror("malloc");
+        return -1;
+    }
     pt = (PT_ENTRY*)malloc(sizeof(PT_ENTRY) * PT_SIZE);
+    if(pt == NULL)
+    {
+        perror("malloc");
+        return -1;
+    }
 
     /* Initialize contents of TLB, page table, and physical memory */
     init_tlb();
@@ -258,8 +268,8 @@ int main(int argc, char** argv)
         fclose(out2);
         cleanup();
         return -1;
-    }
-    
+    }   
+
     /* Read address file line by line */
     while(fgets(str, 6, addr_fp) != NULL)
     {
@@ -292,8 +302,13 @@ int main(int argc, char** argv)
                     if(pt[i].frame_num == frame_num)  // Invalidate any entries that were previously associated with frame_num
                         pt[i].valid = 0;
                 }
-                frame_ptr = update_pt(page_num, frame_num);                // update pt with newly loaded frame
-                
+                frame_ptr = update_pt(page_num, frame_num);                // update pt with newly loaded frame                
+            }
+            
+            for(int i = 0; i < TLB_SIZE; i++) 
+            {
+                if(tlb[i].frame_num == frame_num)  // Invalidate any TLB entries that were previously associated with frame_num
+                    tlb[i].valid = 0;
             }
             tlb_ptr = update_tlb(page_num, frame_num, tlb_ptr);    // update TLB with frame from page table
         }
@@ -302,14 +317,13 @@ int main(int argc, char** argv)
             /* TLB HIT */
             tlb_hits++;
         }
-
+        
         total_references++;
         
         frame_address = frame_num; // Get frame address by combining frame num and offset
         frame_address = (frame_address << OFFSET_SIZE) | offset;
 
-        //printf("Accessing data from frame %d at byte %d...\n", frame_num, offset);
-        byte_from_frame = physical_mem[frame_num][offset];  // Get data from physical memory by
+        byte_from_frame = physical_mem[frame_num][offset];  // Get data from physical memory
         
         /* Generate output files */
         fprintf(out1, "%d\n", page_address);
@@ -325,7 +339,7 @@ int main(int argc, char** argv)
     fclose(out1);
     fclose(out2);
     fclose(out3);
-
+    
     /* Free dynamically allocated memory */
     cleanup();
     
