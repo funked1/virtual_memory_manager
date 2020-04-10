@@ -1,3 +1,6 @@
+/**Dan Funke, Brian Rentsch
+CSC345-0
+Project 3 - Virtual Memory Manager - main.c*/
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,12 +16,11 @@
 #define FRAME_SIZE 256  // number of bytes per frame
 #define NUM_FRAMES 256  // number of frames in physical memory
 
-/* output file names */
-const char file_names[3][10] = {
-    "out1.txt",
-    "out2.txt",
-    "out3.txt"
-};
+/* Input and output filenames */
+#define BACKING_STORE_FILENAME "BACKING_STORE.bin"
+#define OUT1_FILENAME "out1.txt"
+#define OUT2_FILENAME "out2.txt"
+#define OUT3_FILENAME "out3.txt"
     
 /* Structure for a single entry in the TLB */
 typedef struct _TLB_ENTRY
@@ -54,11 +56,21 @@ void cleanup()
     free(pt);
 }
 
-/* Initialize page table elements as invalid*/
+/* Initialize the contents of physical memory frames to -1 */
+void init_mem()
+{
+    for(int i = 0; i < NUM_FRAMES; i++)
+    {
+        for(int j = 0; j < FRAME_SIZE; j++)
+            physical_mem[i][j] = -1;
+    }
+}
+
+/* Initialize page table elements as invalid */
 void init_pt()
 {
     for (int i = 0; i < PT_SIZE; i++)    
-        pt[i].valid = 0;              // initialize all pt entries to invalid
+        pt[i].valid = 0;              // valid bit of 0 = invalid
 }
 
 /* Search for a frame number at a given index in the page table */
@@ -70,7 +82,7 @@ int search_pt(uint8_t page_num)
         return -1;
 }
 
-/* Update the tlb at the index indicated by tlb pointer using FIFO replacement */
+/* Update an entry in the page table and return next frame to be replaced */
 int update_pt(uint8_t page_num, int frame_num)
 {
     /* Update page table entry */
@@ -80,17 +92,25 @@ int update_pt(uint8_t page_num, int frame_num)
     return ((frame_num + 1) % NUM_FRAMES);  // return number of next frame to be replaced according to FIFO
 }
 
-/* Initialize all tlb elements as empty*/
+/* Print the contents of the page table */
+void print_pt()
+{
+    printf("\tfn\tvalid\n");
+    for(int i = 0; i < PT_SIZE; i++)    
+        printf("[%d]:\t%d\t%d\n", i, pt[i].frame_num, pt[i].valid);     
+}
+
+/* Initialize TLB contents */
 void init_tlb()
 {
     for (int i = 0; i < TLB_SIZE; i++)    
-        tlb[i].valid = 0;    // initialize all tlb entries to invalid
+        tlb[i].valid = 0;    // initialize all TLB entries to invalid
 }
 
-/* Search TLB for a page number, get index of TLB entry with that page number */
+/* Search TLB for a page number and return its frame number (if entry exists) */
 int search_tlb(uint8_t page_num)
 {
-    int frame_num = -1; // assume tlb miss
+    int frame_num = -1; // assume TLB miss
 
     for (int i = 0; i < TLB_SIZE; i++)
     {
@@ -104,7 +124,7 @@ int search_tlb(uint8_t page_num)
     return frame_num;
 }
 
-/* Update the tlb at the index indicated by tlb pointer using FIFO replacement */
+/* Update the TLB at the index indicated by TLB pointer using FIFO replacement */
 int update_tlb(uint8_t page_num, int frame_num, int tlb_ptr)
 {
     /* Update tlb entry */
@@ -115,9 +135,20 @@ int update_tlb(uint8_t page_num, int frame_num, int tlb_ptr)
     return ((tlb_ptr + 1) % TLB_SIZE);  //If all of the TLB entries have been filled, TLB pointer circles back to zero to enable FIFO replacement
 }
 
+/* Print the contents of the TLB */
+void print_tlb()
+{
+    printf("\tpn\tfn\tvalid\n");
+    for(int i = 0; i < TLB_SIZE; i++)    
+        printf("[%d]:\t%d\t%d\t%d\n", i, tlb[i].page_num, tlb[i].frame_num, tlb[i].valid);     
+}
+
+/* Handle a page fault by reading data from the backing store and replacing a given frame with this new data */
 int handle_page_fault(char* backing_store_fn, uint8_t page_num, int frame_ptr)
 {
     int8_t buffer[256];
+
+    /* Open backing store file */
     FILE *fp = fopen(backing_store_fn, "r");
     if (fp == NULL)
     {
@@ -144,10 +175,10 @@ int handle_page_fault(char* backing_store_fn, uint8_t page_num, int frame_ptr)
 int main(int argc, char** argv)
 {
     char *addresses_fn;  // Name of input file containing logical addresses
-    char *backing_store_fn = "BACKING_STORE.bin";
+    char *backing_store_fn = BACKING_STORE_FILENAME;
     FILE *addr_fp, *out1, *out2, *out3;
 
-    char str[5];       // Buffer to hold a single address read from file
+    char str[5];            // Buffer to hold a single address read from file
     uint32_t page_address;  // Current logical address read from file     
     uint32_t frame_address; // Translated physical address
     
@@ -158,9 +189,9 @@ int main(int argc, char** argv)
     int frame_ptr = 0; // pointer to next frame to replace
     int tlb_ptr = 0;   // pointer to next tlb entry to replace
 
-    int page_faults = 0;
-    int tlb_hits = 0;
-    int total_references = 0;
+    int page_faults = 0;  // Total page faults
+    int tlb_hits = 0;     // Total TLB hits
+    int total_references = 0;   // Total pages that have been referenced in the simulation
     
     int8_t byte_from_frame; // Byte read from physical memory
         
@@ -183,10 +214,22 @@ int main(int argc, char** argv)
 
     /* Allocate and initialize TLB and page table */
     tlb = (TLB_ENTRY*)malloc(sizeof(TLB_ENTRY) * TLB_SIZE);
+    if(tlb == NULL)
+    {
+        perror("malloc");
+        return -1;
+    }
     pt = (PT_ENTRY*)malloc(sizeof(PT_ENTRY) * PT_SIZE);
-        
+    if(pt == NULL)
+    {
+        perror("malloc");
+        return -1;
+    }
+
+    /* Initialize contents of TLB, page table, and physical memory */
     init_tlb();
     init_pt();
+    init_mem();
     
     /* Open addresses file for reading */
     addr_fp = fopen(addresses_fn, "r");
@@ -227,7 +270,7 @@ int main(int argc, char** argv)
         cleanup();
         return -1;
     }
-    
+
     /* Read address file line by line */
     while (fgets(str, 6, addr_fp) != NULL)
     {
@@ -269,7 +312,7 @@ int main(int argc, char** argv)
         frame_address = frame_num; // Get frame address by combining frame num and offset
         frame_address = (frame_address << OFFSET_SIZE) | offset;
 
-        byte_from_frame = physical_mem[frame_num][offset];  // Get data from physical memory by
+        byte_from_frame = physical_mem[frame_num][offset];  // Get data from physical memory
         
         /* Generate output files */
         fprintf(out1, "%d\n", page_address);
@@ -285,7 +328,7 @@ int main(int argc, char** argv)
     fclose(out1);
     fclose(out2);
     fclose(out3);
-
+    
     /* Free dynamically allocated memory */
     cleanup();
     
