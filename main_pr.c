@@ -99,7 +99,7 @@ void print_pt()
         printf("[%d]:\t%d\t%d\n", i, pt[i].frame_num, pt[i].valid);     
 }
 
-/* Initialize TLB contents*/
+/* Initialize TLB contents */
 void init_tlb()
 {
     for(int i = 0; i < TLB_SIZE; i++)    

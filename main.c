@@ -22,7 +22,7 @@ Project 3 - Virtual Memory Manager - main.c*/
 #define OUT2_FILENAME "out2.txt"
 #define OUT3_FILENAME "out3.txt"
     
-/* Structure for a single entry in the TLB */
+/* A single entry in the TLB */
 typedef struct _TLB_ENTRY
 {
     int page_num;
@@ -30,7 +30,7 @@ typedef struct _TLB_ENTRY
     int valid;  //valid bit: 0 -> invalid; 1 -> valid
 } TLB_ENTRY;    
 
-/* Structure for a single entry in the page table */
+/* A single entry in the page table */
 typedef struct _PT_ENTRY
 {
     int frame_num;
@@ -69,7 +69,7 @@ void init_mem()
 /* Initialize page table elements as invalid */
 void init_pt()
 {
-    for (int i = 0; i < PT_SIZE; i++)    
+    for(int i = 0; i < PT_SIZE; i++)    
         pt[i].valid = 0;              // valid bit of 0 = invalid
 }
 
@@ -86,7 +86,7 @@ int search_pt(uint8_t page_num)
 int update_pt(uint8_t page_num, int frame_num)
 {
     /* Update page table entry */
-    pt[page_num].valid = 1;
+    pt[page_num].valid = 1;       //Entry is valid
     pt[page_num].frame_num = frame_num;
 
     return ((frame_num + 1) % NUM_FRAMES);  // return number of next frame to be replaced according to FIFO
@@ -209,7 +209,7 @@ int main(int argc, char** argv)
     }
     else
     {
-        addresses_fn = argv[1];
+        addresses_fn = argv[1];  // Get path to file containing logical addresses from user
     }
 
     /* Allocate and initialize TLB and page table */
@@ -241,7 +241,7 @@ int main(int argc, char** argv)
     }
         
     /* Open output files for writing */
-    out1 = fopen("out1.txt", "w");
+    out1 = fopen(OUT1_FILENAME, "w");
     if(out1 == NULL)
     {
         perror("Error opening file out1.txt");
@@ -250,7 +250,7 @@ int main(int argc, char** argv)
         return -1;
     }
     
-    out2 = fopen("out2.txt", "w");    
+    out2 = fopen(OUT2_FILENAME, "w");    
     if(out2 == NULL)
     {
         perror("Error opening file out2.txt");
@@ -260,7 +260,7 @@ int main(int argc, char** argv)
         return -1;
     }
         
-    out3 = fopen("out3.txt", "w");
+    out3 = fopen(OUT3_FILENAME, "w");
     if(out3 == NULL)
     {
         perror("Error opening file out3.txt");
