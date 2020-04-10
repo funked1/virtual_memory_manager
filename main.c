@@ -103,7 +103,7 @@ void print_pt()
 /* Initialize TLB contents */
 void init_tlb()
 {
-    for (int i = 0; i < TLB_SIZE; i++)    
+    for(int i = 0; i < TLB_SIZE; i++)    
         tlb[i].valid = 0;    // initialize all TLB entries to invalid
 }
 
@@ -112,9 +112,9 @@ int search_tlb(uint8_t page_num)
 {
     int frame_num = -1; // assume TLB miss
 
-    for (int i = 0; i < TLB_SIZE; i++)
+    for(int i = 0; i < TLB_SIZE; i++)
     {
-        if (tlb[i].page_num == page_num && tlb[i].valid)
+        if(tlb[i].page_num == page_num && tlb[i].valid)
         {
             frame_num = tlb[i].frame_num;
             break;
@@ -150,7 +150,7 @@ int handle_page_fault(char* backing_store_fn, uint8_t page_num, int frame_ptr)
 
     /* Open backing store file */
     FILE *fp = fopen(backing_store_fn, "r");
-    if (fp == NULL)
+    if(fp == NULL)
     {
         perror("Error opening memory file");
         return -1;
@@ -162,7 +162,7 @@ int handle_page_fault(char* backing_store_fn, uint8_t page_num, int frame_ptr)
         fread(buffer, FRAME_SIZE, 1, fp);
 
         /* Fill frame with buffer contents */
-        for (int i = 0; i < FRAME_SIZE; ++i)
+        for(int i = 0; i < FRAME_SIZE; ++i)
         {
             physical_mem[frame_ptr][i] = buffer[i];
         }
@@ -178,7 +178,7 @@ int main(int argc, char** argv)
     char *backing_store_fn = BACKING_STORE_FILENAME;
     FILE *addr_fp, *out1, *out2, *out3;
 
-    char str[5];            // Buffer to hold a single address read from file
+    char str[7];            // Buffer to hold a single address read from file
     uint32_t page_address;  // Current logical address read from file     
     uint32_t frame_address; // Translated physical address
     
@@ -187,7 +187,7 @@ int main(int argc, char** argv)
     int frame_num;    // Frame number determined by either TLB or page table
     
     int frame_ptr = 0; // pointer to next frame to replace
-    int tlb_ptr = 0;   // pointer to next tlb entry to replace
+    int tlb_ptr = 0;   // pointer to next TLB entry to replace
 
     int page_faults = 0;  // Total page faults
     int tlb_hits = 0;     // Total TLB hits
@@ -233,7 +233,7 @@ int main(int argc, char** argv)
     
     /* Open addresses file for reading */
     addr_fp = fopen(addresses_fn, "r");
-    if (addr_fp == NULL)
+    if(addr_fp == NULL)
     {
         perror(addresses_fn);
         cleanup();
@@ -242,7 +242,7 @@ int main(int argc, char** argv)
         
     /* Open output files for writing */
     out1 = fopen("out1.txt", "w");
-    if (out1 == NULL)
+    if(out1 == NULL)
     {
         perror("Error opening file out1.txt");
         fclose(addr_fp);
@@ -251,7 +251,7 @@ int main(int argc, char** argv)
     }
     
     out2 = fopen("out2.txt", "w");    
-    if (out2 == NULL)
+    if(out2 == NULL)
     {
         perror("Error opening file out2.txt");
         fclose(addr_fp);
@@ -261,7 +261,7 @@ int main(int argc, char** argv)
     }
         
     out3 = fopen("out3.txt", "w");
-    if (out3 == NULL)
+    if(out3 == NULL)
     {
         perror("Error opening file out3.txt");
         fclose(addr_fp);
@@ -272,14 +272,10 @@ int main(int argc, char** argv)
     }
 
     /* Read address file line by line */
-    while (fgets(str, 6, addr_fp) != NULL)
+    while(fgets(str, 7, addr_fp) != NULL)
     {
         /* Convert address to int type */
-        page_address = atoi(str);
-        if (page_address == 0) // ignore newline characters
-        {    
-            continue;
-        }
+        page_address = atoi(str);        
 
         /* Parse address for page number and offset */
         page_num = (page_address << (ADDR_SIZE - (PAGE_NUM_SIZE + OFFSET_SIZE))) >> (ADDR_SIZE - PAGE_NUM_SIZE);
@@ -317,7 +313,7 @@ int main(int argc, char** argv)
         /* Generate output files */
         fprintf(out1, "%d\n", page_address);
         fprintf(out2, "%d\n", frame_address);
-        fprintf(out3, "%d\n", byte_from_frame);               
+        fprintf(out3, "%d\n", byte_from_frame);
     }
 
     printf("Page faults = %d / %d, %2f\n", page_faults, total_references, ((double)page_faults / (double)total_references));
@@ -327,7 +323,7 @@ int main(int argc, char** argv)
     fclose(addr_fp);
     fclose(out1);
     fclose(out2);
-    fclose(out3);
+    fclose(out3);    
     
     /* Free dynamically allocated memory */
     cleanup();

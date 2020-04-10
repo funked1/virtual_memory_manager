@@ -177,7 +177,7 @@ int main(int argc, char** argv)
     char *backing_store_fn = BACKING_STORE_FILENAME;
     FILE *addr_fp, *out1, *out2, *out3;
 
-    char str[5];            // Buffer to hold a single address read from file
+    char str[7];            // Buffer to hold a single address read from file
     uint32_t page_address;  // Current logical address read from file     
     uint32_t frame_address; // Translated physical address
     
@@ -271,14 +271,10 @@ int main(int argc, char** argv)
     }   
 
     /* Read address file line by line */
-    while(fgets(str, 6, addr_fp) != NULL)
+    while(fgets(str, 7, addr_fp) != NULL)
     {
         /* Convert address to int type */
         page_address = atoi(str);
-        if(page_address == 0) // ignore newline characters
-        {    
-            continue;
-        }
 
         /* Parse address for page number and offset */
         page_num = (page_address << (ADDR_SIZE - (PAGE_NUM_SIZE + OFFSET_SIZE))) >> (ADDR_SIZE - PAGE_NUM_SIZE);
