@@ -295,7 +295,7 @@ int main(int argc, char** argv)
                 /* Mark any entries in page table previously associated with the newly updated frame as invalid */
                 for(int i = 0; i < PT_SIZE; i++) 
                 {
-                    if(pt[i].frame_num == frame_num)  // Invalidate any entries that were previously associated with frame_num
+                    if(pt[i].frame_num == frame_num)  // Invalidate any entries that were previously associated with the frame that was replaced
                         pt[i].valid = 0;
                 }
                 frame_ptr = update_pt(page_num, frame_num);                // update pt with newly loaded frame                
@@ -327,8 +327,8 @@ int main(int argc, char** argv)
         fprintf(out3, "%d\n", byte_from_frame);
     }
 
-    printf("Page faults = %d / %d, %2f\n", page_faults, total_references, ((double)page_faults / (double)total_references));
-    printf("TLB hits = %d / %d, %2f\n", tlb_hits, total_references, ((double)tlb_hits / (double)total_references));
+    printf("Page faults = %d / %d, %2.3f\n", page_faults, total_references, ((double)page_faults / (double)total_references));
+    printf("TLB hits = %d / %d, %2.3f\n", tlb_hits, total_references, ((double)tlb_hits / (double)total_references));
     
     /* Close files */
     fclose(addr_fp);

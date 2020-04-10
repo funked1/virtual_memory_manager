@@ -316,8 +316,8 @@ int main(int argc, char** argv)
         fprintf(out3, "%d\n", byte_from_frame);
     }
 
-    printf("Page faults = %d / %d, %2f\n", page_faults, total_references, ((double)page_faults / (double)total_references));
-    printf("TLB hits = %d / %d, %2f\n", tlb_hits, total_references, ((double)tlb_hits / (double)total_references));
+    printf("Page faults = %d / %d, %2.3f\n", page_faults, total_references, ((double)page_faults / (double)total_references));
+    printf("TLB hits = %d / %d, %2.3f\n", tlb_hits, total_references, ((double)tlb_hits / (double)total_references));
     
     /* Close files */
     fclose(addr_fp);
